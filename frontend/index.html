@@ -6,19 +6,26 @@
   <title>Student Tech Hub | Campus Innovation & Workshops</title>
   <meta name="description" content="Discover student-led tech workshops, hackathons, and developer bootcamps. Learn, build, and connect.">
   
-  <!-- Modern Google Fonts -->
+  <!-- Futuristic Google Fonts: Orbitron + Space Grotesk -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   
   <!-- Main Stylesheet -->
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+  <!-- 3D Particle Network Canvas Background -->
+  <canvas id="particle-canvas" aria-hidden="true"></canvas>
+
+  <!-- Scanline Overlay -->
+  <div class="scanline-overlay" aria-hidden="true"></div>
+
   <!-- Ambient Glow Gradients in Background -->
   <div class="ambient-glow glow-1" aria-hidden="true"></div>
   <div class="ambient-glow glow-2" aria-hidden="true"></div>
+  <div class="ambient-glow glow-3" aria-hidden="true"></div>
 
   <!-- Navigation Bar -->
   <nav class="navbar" id="navbar">

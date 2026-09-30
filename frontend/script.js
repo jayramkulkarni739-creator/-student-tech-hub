@@ -778,4 +778,149 @@ document.addEventListener("DOMContentLoaded", () => {
   checkBackendHealth();
   updateSavedCountBadge();
   fetchEvents();
+  initParticleCanvas();
+  init3DCardTilt();
 });
+
+// ==========================================================================
+// 15. 3D Particle Network Canvas
+// ==========================================================================
+function initParticleCanvas() {
+  const canvas = document.getElementById("particle-canvas");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+
+  let W = canvas.width  = window.innerWidth;
+  let H = canvas.height = window.innerHeight;
+
+  window.addEventListener("resize", () => {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  });
+
+  // Detect if dark or light — pick neon color
+  function getNeonColor() {
+    return document.documentElement.getAttribute("data-theme") === "light"
+      ? "0, 168, 122"
+      : "0, 255, 180";
+  }
+
+  const PARTICLE_COUNT = 60;
+  const CONNECTION_DIST = 150;
+
+  // 3D Particle objects (project from z depth onto 2D canvas)
+  const particles = Array.from({ length: PARTICLE_COUNT }, () => ({
+    x: Math.random() * W,
+    y: Math.random() * H,
+    z: Math.random() * 600 + 100,       // depth
+    vx: (Math.random() - 0.5) * 0.45,
+    vy: (Math.random() - 0.5) * 0.45,
+    vz: (Math.random() - 0.5) * 0.3,
+    r: Math.random() * 2 + 1,
+  }));
+
+  let mouseX = W / 2;
+  let mouseY = H / 2;
+  document.addEventListener("mousemove", (e) => { mouseX = e.clientX; mouseY = e.clientY; });
+
+  function project(x, y, z) {
+    const fov = 500;
+    const scale = fov / (fov + z);
+    return {
+      px: (x - W / 2) * scale + W / 2,
+      py: (y - H / 2) * scale + H / 2,
+      scale,
+    };
+  }
+
+  function frame() {
+    ctx.clearRect(0, 0, W, H);
+    const neon = getNeonColor();
+
+    // Gentle mouse parallax offset
+    const dx = (mouseX - W / 2) / W;
+    const dy = (mouseY - H / 2) / H;
+
+    particles.forEach((p) => {
+      p.x += p.vx + dx * 0.3;
+      p.y += p.vy + dy * 0.3;
+      p.z += p.vz;
+
+      if (p.x < 0 || p.x > W) p.vx *= -1;
+      if (p.y < 0 || p.y > H) p.vy *= -1;
+      if (p.z < 50 || p.z > 700) p.vz *= -1;
+
+      const { px, py, scale } = project(p.x, p.y, p.z);
+      const alpha = 0.15 + scale * 0.65;
+      const radius = p.r * scale * 1.5;
+
+      ctx.beginPath();
+      ctx.arc(px, py, radius, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${neon}, ${alpha})`;
+      ctx.fill();
+    });
+
+    // Draw connection lines between close particles
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const a = particles[i];
+        const b = particles[j];
+        const dist3D = Math.sqrt(
+          (a.x - b.x) ** 2 + (a.y - b.y) ** 2 + (a.z - b.z) ** 2
+        );
+
+        if (dist3D < CONNECTION_DIST * 2) {
+          const pa = project(a.x, a.y, a.z);
+          const pb = project(b.x, b.y, b.z);
+          const alpha = (1 - dist3D / (CONNECTION_DIST * 2)) * 0.18;
+
+          ctx.beginPath();
+          ctx.moveTo(pa.px, pa.py);
+          ctx.lineTo(pb.px, pb.py);
+          ctx.strokeStyle = `rgba(${neon}, ${alpha})`;
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+
+    requestAnimationFrame(frame);
+  }
+
+  frame();
+}
+
+// ==========================================================================
+// 16. Live 3D Mouse-Tilt on Event Cards
+// ==========================================================================
+function init3DCardTilt() {
+  function applyTilt(el) {
+    el.addEventListener("mousemove", (e) => {
+      const rect = el.getBoundingClientRect();
+      const cx = rect.left + rect.width  / 2;
+      const cy = rect.top  + rect.height / 2;
+      const rx = ((e.clientY - cy) / rect.height) * -14; // vertical tilt
+      const ry = ((e.clientX - cx) / rect.width)  *  14; // horizontal tilt
+      el.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-6px)`;
+    });
+
+    el.addEventListener("mouseleave", () => {
+      el.style.transform = "";
+    });
+  }
+
+  // Apply to existing cards
+  document.querySelectorAll(".event-card").forEach(applyTilt);
+
+  // Watch for new cards added by JavaScript rendering
+  const observer = new MutationObserver(() => {
+    document.querySelectorAll(".event-card:not([data-tilt])").forEach((el) => {
+      el.setAttribute("data-tilt", "1");
+      applyTilt(el);
+    });
+  });
+
+  const feed = document.getElementById("events-container");
+  if (feed) observer.observe(feed, { childList: true });
+}
+
