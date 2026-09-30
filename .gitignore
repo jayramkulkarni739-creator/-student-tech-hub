@@ -23,3 +23,6 @@ Thumbs.db
 
 # Node (just in case)
 node_modules/
+
+# Nested projects
+hackathon-2026/

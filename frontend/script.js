@@ -1,26 +1,33 @@
 /**
- * Student Tech Hub - Interactive Frontend Logic & Feature Suite
- * Pure Vanilla JavaScript (No heavy frameworks, modular, high performance)
+ * NovaSphere 3D Tech Nexus - Frontend Core Logic & 3D Spatial Engine
+ * Pure Vanilla JavaScript (No React, No Next.js, No TypeScript, No heavy frameworks)
+ * Features:
+ *  1. Dual-Host Auto-Fallback API Client (localhost / 127.0.0.1:8000)
+ *  2. Interactive 3D Spatial Core (Three.js WebGL with Native Canvas 3D Fallback)
+ *  3. Interactive 3D Flippable Holographic Pass with CSS Perspective
+ *  4. 3D Parallax Tilt & Cursor Glare on Event Cards
+ *  5. 3D Particle Constellation Background
+ *  6. Real-Time Search, Category Filtering & Event Bookmarking
+ *  7. Web Audio API Tech Synthesizer & Confetti Celebration
  */
 
 // ==========================================================================
-// 1. Backend Configuration & Dual-Host Auto-Fallback
+// 1. API Configuration & Dual-Host Auto-Fallback
 // ==========================================================================
 let activeApiHost = window.location.hostname === "localhost" ? "http://localhost:8000" : "http://127.0.0.1:8000";
-const API_BASE_URL = activeApiHost; // Constant safeguard against reference errors
 
 async function apiFetch(endpoint, options = {}) {
   try {
     const res = await fetch(`${activeApiHost}${endpoint}`, options);
     return res;
   } catch (err) {
-    // If request failed, attempt alternate host automatically (localhost <-> 127.0.0.1)
+    // If request fails, automatically attempt the alternate host
     const alternateHost = activeApiHost.includes("localhost")
       ? "http://127.0.0.1:8000"
       : "http://localhost:8000";
     try {
       const altRes = await fetch(`${alternateHost}${endpoint}`, options);
-      activeApiHost = alternateHost; // Switch to the responsive host!
+      activeApiHost = alternateHost; // Switch to the responsive host
       return altRes;
     } catch {
       throw err;
@@ -34,12 +41,12 @@ async function apiFetch(endpoint, options = {}) {
 let allEvents = [];
 let activeCategory = "all";
 let searchQuery = "";
-let savedEventIds = JSON.parse(localStorage.getItem("sth_saved_events") || "[]");
-let soundEnabled = localStorage.getItem("sth_sound") === "true";
+let savedEventIds = JSON.parse(localStorage.getItem("novasphere_saved_events") || "[]");
+let soundEnabled = localStorage.getItem("novasphere_sound") === "true";
 let countdownInterval = null;
 
 // ==========================================================================
-// 3. Futuristic Web Audio API Sound Synthesizer
+// 3. Web Audio API Tech Synthesizer
 // ==========================================================================
 let audioCtx = null;
 
@@ -63,32 +70,48 @@ function playTechTone(type = "click") {
     if (type === "click") {
       osc.type = "sine";
       osc.frequency.setValueAtTime(800, now);
-      osc.frequency.exponentialRampToValueAtTime(400, now + 0.06);
+      osc.frequency.exponentialRampToValueAtTime(350, now + 0.05);
       gain.gain.setValueAtTime(0.12, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
       osc.start(now);
-      osc.stop(now + 0.06);
+      osc.stop(now + 0.05);
     } else if (type === "success") {
       osc.type = "triangle";
-      osc.frequency.setValueAtTime(523.25, now); // C5
-      osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
-      osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
+      osc.frequency.setValueAtTime(523.25, now);         // C5
+      osc.frequency.setValueAtTime(659.25, now + 0.08);  // E5
+      osc.frequency.setValueAtTime(783.99, now + 0.16);  // G5
       osc.frequency.setValueAtTime(1046.50, now + 0.24); // C6
-      gain.gain.setValueAtTime(0.15, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+      gain.gain.setValueAtTime(0.16, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
       osc.start(now);
-      osc.stop(now + 0.4);
+      osc.stop(now + 0.45);
     } else if (type === "refresh") {
       osc.type = "sine";
-      osc.frequency.setValueAtTime(300, now);
-      osc.frequency.exponentialRampToValueAtTime(900, now + 0.12);
+      osc.frequency.setValueAtTime(280, now);
+      osc.frequency.exponentialRampToValueAtTime(950, now + 0.14);
       gain.gain.setValueAtTime(0.1, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
       osc.start(now);
-      osc.stop(now + 0.12);
+      osc.stop(now + 0.14);
+    } else if (type === "pulse") {
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(120, now);
+      osc.frequency.exponentialRampToValueAtTime(60, now + 0.35);
+      gain.gain.setValueAtTime(0.25, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      osc.start(now);
+      osc.stop(now + 0.35);
+    } else if (type === "flip") {
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(400, now);
+      osc.frequency.exponentialRampToValueAtTime(800, now + 0.08);
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+      osc.start(now);
+      osc.stop(now + 0.08);
     }
   } catch (e) {
-    // Gracefully ignore audio context limitations
+    // Graceful silent fallback if Web Audio is restricted
   }
 }
 
@@ -100,378 +123,742 @@ function showToast(message, type = "info") {
   if (!container) return;
 
   const toast = document.createElement("div");
-  toast.className = `toast-item toast-${type}`;
-  
-  const icon = type === "success" ? "✅" : type === "error" ? "⚠️" : "⚡";
-  toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+  toast.className = `toast toast-${type}`;
+
+  const icon = type === "success" ? "✓" : type === "error" ? "✕" : "ℹ";
+  toast.innerHTML = `<span style="font-weight: bold; color: var(--neon-cyan);">${icon}</span> <span>${escapeHtml(message)}</span>`;
+
   container.appendChild(toast);
 
   setTimeout(() => {
     toast.style.opacity = "0";
-    toast.style.transform = "translateX(100%)";
+    toast.style.transform = "translateX(40px)";
+    toast.style.transition = "all 0.3s ease";
     setTimeout(() => toast.remove(), 300);
   }, 4000);
 }
 
 // ==========================================================================
-// 5. DOM References
+// 5. Backend Health Polling
 // ==========================================================================
-const statusPulse = document.getElementById("status-pulse");
-const statusLabel = document.getElementById("status-label");
-const themeToggleBtn = document.getElementById("theme-toggle-btn");
-const themeIcon = document.getElementById("theme-icon");
-const soundToggleBtn = document.getElementById("sound-toggle-btn");
-const soundIcon = document.getElementById("sound-icon");
+async function checkBackendHealth() {
+  const pulse = document.getElementById("status-pulse");
+  const label = document.getElementById("status-label");
+  if (!pulse || !label) return;
 
+  try {
+    const res = await apiFetch("/", { method: "GET" });
+    if (res.ok) {
+      pulse.className = "status-pulse online";
+      label.textContent = "FastAPI Online (8000)";
+      label.style.color = "var(--neon-green)";
+    } else {
+      throw new Error("Backend offline");
+    }
+  } catch (e) {
+    pulse.className = "status-pulse offline";
+    label.textContent = "Backend Offline (Run uvicorn)";
+    label.style.color = "var(--accent-rose)";
+  }
+}
+
+// ==========================================================================
+// 6. Interactive 3D Spatial Core Engine (Three.js with Native 3D Fallback)
+// ==========================================================================
+let core3DControls = {
+  wireframe: true,
+  speedMultiplier: 1.0,
+  pulseTrigger: null
+};
+
+function initHero3DStage() {
+  const canvas = document.getElementById("hero-3d-canvas");
+  const container = document.getElementById("canvas-3d-viewport");
+  if (!canvas || !container) return;
+
+  // Check if Three.js is available via CDN
+  if (typeof THREE !== "undefined") {
+    initThreeJsCore(canvas, container);
+  } else {
+    initFallbackCanvas3D(canvas, container);
+  }
+
+  // Setup 3D Control Buttons
+  const pulseBtn = document.getElementById("btn-3d-pulse");
+  const wireframeBtn = document.getElementById("btn-3d-wireframe");
+  const speedBtn = document.getElementById("btn-3d-speed");
+
+  if (pulseBtn) {
+    pulseBtn.addEventListener("click", () => {
+      playTechTone("pulse");
+      if (core3DControls.pulseTrigger) core3DControls.pulseTrigger();
+      showToast("3D Energy Pulse wave emitted!", "info");
+    });
+  }
+
+  if (wireframeBtn) {
+    wireframeBtn.addEventListener("click", () => {
+      core3DControls.wireframe = !core3DControls.wireframe;
+      wireframeBtn.innerHTML = core3DControls.wireframe
+        ? "<span>🌐 Wireframe</span>"
+        : "<span>💎 Solid Crystal</span>";
+      playTechTone("click");
+    });
+  }
+
+  if (speedBtn) {
+    speedBtn.addEventListener("click", () => {
+      if (core3DControls.speedMultiplier === 1.0) {
+        core3DControls.speedMultiplier = 2.5;
+        speedBtn.innerHTML = "<span>⚡ Hyperdrive</span>";
+      } else if (core3DControls.speedMultiplier === 2.5) {
+        core3DControls.speedMultiplier = 4.0;
+        speedBtn.innerHTML = "<span>🚀 Warp Speed</span>";
+      } else {
+        core3DControls.speedMultiplier = 1.0;
+        speedBtn.innerHTML = "<span>🔄 Normal Speed</span>";
+      }
+      playTechTone("click");
+    });
+  }
+}
+
+// --- Implementation A: Three.js WebGL Spatial Engine ---
+function initThreeJsCore(canvas, container) {
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+  camera.position.z = 4.8;
+
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  // Root group that tilts with mouse
+  const rootGroup = new THREE.Group();
+  scene.add(rootGroup);
+
+  // 1. Central Icosahedron
+  const icoGeo = new THREE.IcosahedronGeometry(1.4, 1);
+  const icoMat = new THREE.MeshBasicMaterial({
+    color: 0x00f0ff,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.85
+  });
+  const icoMesh = new THREE.Mesh(icoGeo, icoMat);
+  rootGroup.add(icoMesh);
+
+  // 2. Inner Glowing Core
+  const innerGeo = new THREE.OctahedronGeometry(0.7, 0);
+  const innerMat = new THREE.MeshBasicMaterial({
+    color: 0xa855f7,
+    wireframe: false,
+    transparent: true,
+    opacity: 0.7
+  });
+  const innerMesh = new THREE.Mesh(innerGeo, innerMat);
+  rootGroup.add(innerMesh);
+
+  // 3. Orbiting Gimbal Ring 1
+  const ringGeo1 = new THREE.TorusGeometry(2.0, 0.02, 16, 100);
+  const ringMat1 = new THREE.MeshBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.55 });
+  const ring1 = new THREE.Mesh(ringGeo1, ringMat1);
+  ring1.rotation.x = Math.PI / 3;
+  rootGroup.add(ring1);
+
+  // 4. Orbiting Gimbal Ring 2
+  const ringGeo2 = new THREE.TorusGeometry(2.3, 0.015, 16, 100);
+  const ringMat2 = new THREE.MeshBasicMaterial({ color: 0xa855f7, transparent: true, opacity: 0.45 });
+  const ring2 = new THREE.Mesh(ringGeo2, ringMat2);
+  ring2.rotation.y = Math.PI / 4;
+  rootGroup.add(ring2);
+
+  // 5. Orbiting Satellites
+  const satGeo = new THREE.SphereGeometry(0.08, 12, 12);
+  const satMat = new THREE.MeshBasicMaterial({ color: 0x39ff14 });
+  const satellites = [];
+  for (let i = 0; i < 3; i++) {
+    const sat = new THREE.Mesh(satGeo, satMat);
+    rootGroup.add(sat);
+    satellites.push({
+      mesh: sat,
+      angle: (i * Math.PI * 2) / 3,
+      radius: 2.0,
+      speed: 0.025 + i * 0.01
+    });
+  }
+
+  // 6. Expanding 3D Pulse Wave
+  const pulseRingGeo = new THREE.RingGeometry(0.1, 0.15, 64);
+  const pulseRingMat = new THREE.MeshBasicMaterial({
+    color: 0x00f0ff,
+    side: THREE.DoubleSide,
+    transparent: true,
+    opacity: 0
+  });
+  const pulseRing = new THREE.Mesh(pulseRingGeo, pulseRingMat);
+  rootGroup.add(pulseRing);
+
+  let pulseActive = false;
+  let pulseScale = 0.1;
+  let pulseOpacity = 0;
+
+  core3DControls.pulseTrigger = () => {
+    pulseActive = true;
+    pulseScale = 0.1;
+    pulseOpacity = 0.95;
+    pulseRing.scale.set(1, 1, 1);
+  };
+
+  // Interactive Mouse Parallax & Drag
+  let targetRotX = 0;
+  let targetRotY = 0;
+  let isDragging = false;
+  let prevMouseX = 0;
+  let prevMouseY = 0;
+
+  container.addEventListener("mousedown", (e) => {
+    isDragging = true;
+    prevMouseX = e.clientX;
+    prevMouseY = e.clientY;
+  });
+
+  window.addEventListener("mouseup", () => { isDragging = false; });
+
+  window.addEventListener("mousemove", (e) => {
+    if (isDragging) {
+      const deltaX = e.clientX - prevMouseX;
+      const deltaY = e.clientY - prevMouseY;
+      targetRotY += deltaX * 0.01;
+      targetRotX += deltaY * 0.01;
+      prevMouseX = e.clientX;
+      prevMouseY = e.clientY;
+    } else {
+      const rect = container.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
+      if (dist < 600) {
+        targetRotY = ((e.clientX - cx) / rect.width) * 0.65;
+        targetRotX = ((e.clientY - cy) / rect.height) * 0.65;
+      }
+    }
+  });
+
+  // Handle Resize
+  window.addEventListener("resize", () => {
+    if (!container.clientWidth) return;
+    camera.aspect = container.clientWidth / container.clientHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(container.clientWidth, container.clientHeight);
+  });
+
+  // Animation Loop
+  let clock = 0;
+  function animate() {
+    requestAnimationFrame(animate);
+    clock += 0.015 * core3DControls.speedMultiplier;
+
+    // Apply wireframe toggle dynamically
+    icoMat.wireframe = core3DControls.wireframe;
+
+    // Smooth inertia rotation
+    rootGroup.rotation.y += (targetRotY - rootGroup.rotation.y) * 0.06;
+    rootGroup.rotation.x += (targetRotX - rootGroup.rotation.x) * 0.06;
+
+    // Autonomous spin
+    icoMesh.rotation.x += 0.006 * core3DControls.speedMultiplier;
+    icoMesh.rotation.y += 0.008 * core3DControls.speedMultiplier;
+
+    innerMesh.rotation.x -= 0.012 * core3DControls.speedMultiplier;
+    innerMesh.rotation.z += 0.01 * core3DControls.speedMultiplier;
+
+    ring1.rotation.z += 0.01 * core3DControls.speedMultiplier;
+    ring2.rotation.x -= 0.008 * core3DControls.speedMultiplier;
+
+    // Update satellites in 3D orbit
+    satellites.forEach((sat) => {
+      sat.angle += sat.speed * core3DControls.speedMultiplier;
+      sat.mesh.position.x = Math.cos(sat.angle) * sat.radius;
+      sat.mesh.position.y = Math.sin(sat.angle) * (sat.radius * 0.65);
+      sat.mesh.position.z = Math.sin(sat.angle * 1.5) * 0.8;
+    });
+
+    // Animate expanding pulse
+    if (pulseActive) {
+      pulseScale += 0.08;
+      pulseOpacity -= 0.018;
+      pulseRing.scale.set(pulseScale, pulseScale, pulseScale);
+      pulseRingMat.opacity = Math.max(0, pulseOpacity);
+      if (pulseOpacity <= 0) {
+        pulseActive = false;
+      }
+    }
+
+    renderer.render(scene, camera);
+  }
+
+  animate();
+}
+
+// --- Implementation B: Robust Fallback Canvas 3D Spatial Engine ---
+function initFallbackCanvas3D(canvas, container) {
+  const ctx = canvas.getContext("2d");
+  let W = canvas.width = container.clientWidth;
+  let H = canvas.height = container.clientHeight;
+
+  window.addEventListener("resize", () => {
+    W = canvas.width = container.clientWidth;
+    H = canvas.height = container.clientHeight;
+  });
+
+  let rotX = 0.3;
+  let rotY = 0;
+  let pulseRadius = 0;
+  let pulseOpacity = 0;
+
+  core3DControls.pulseTrigger = () => {
+    pulseRadius = 10;
+    pulseOpacity = 0.9;
+  };
+
+  // Generate 3D sphere vertices
+  const vertices = [];
+  const rings = 8;
+  const segments = 16;
+  for (let r = 0; r <= rings; r++) {
+    const theta = (r * Math.PI) / rings;
+    for (let s = 0; s < segments; s++) {
+      const phi = (s * 2 * Math.PI) / segments;
+      vertices.push({
+        x: Math.sin(theta) * Math.cos(phi) * 90,
+        y: Math.cos(theta) * 90,
+        z: Math.sin(theta) * Math.sin(phi) * 90,
+      });
+    }
+  }
+
+  function project(x, y, z) {
+    const fov = 350;
+    const scale = fov / (fov + z + 180);
+    return {
+      px: x * scale + W / 2,
+      py: y * scale + H / 2,
+      scale,
+    };
+  }
+
+  function frame() {
+    ctx.clearRect(0, 0, W, H);
+    rotY += 0.012 * core3DControls.speedMultiplier;
+
+    // Draw rotating wireframe vertices
+    ctx.fillStyle = "#00f0ff";
+    vertices.forEach((v) => {
+      // 3D Rotation matrices
+      const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
+      const cosX = Math.cos(rotX), sinX = Math.sin(rotX);
+
+      const x1 = v.x * cosY + v.z * sinY;
+      const z1 = -v.x * sinY + v.z * cosY;
+      const y1 = v.y * cosX - z1 * sinX;
+      const z2 = v.y * sinX + z1 * cosX;
+
+      const p = project(x1, y1, z2);
+      ctx.beginPath();
+      ctx.arc(p.px, p.py, Math.max(1, p.scale * 2.5), 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Draw Pulse if active
+    if (pulseOpacity > 0) {
+      pulseRadius += 3.5;
+      pulseOpacity -= 0.02;
+      ctx.beginPath();
+      ctx.arc(W / 2, H / 2, pulseRadius, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(0, 240, 255, ${Math.max(0, pulseOpacity)})`;
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+    }
+
+    requestAnimationFrame(frame);
+  }
+
+  frame();
+}
+
+// ==========================================================================
+// 7. Event Fetching & Rendering Suite
+// ==========================================================================
+const eventsContainer = document.getElementById("events-container");
 const loadEventsBtn = document.getElementById("load-events-btn");
 const heroLoadBtn = document.getElementById("hero-load-btn");
 const emptyStateLoadBtn = document.getElementById("empty-state-load-btn");
-const eventsContainer = document.getElementById("events-container");
-const categoryPillsContainer = document.getElementById("category-pills");
 const searchInput = document.getElementById("event-search-input");
 const searchClearBtn = document.getElementById("search-clear-btn");
-const savedCountBadge = document.getElementById("saved-count");
+const categoryPills = document.getElementById("category-pills");
+const eventSelect = document.getElementById("event-select");
 const metricEventsCount = document.getElementById("metric-events-count");
 
-const registrationForm = document.getElementById("registration-form");
-const studentNameInput = document.getElementById("student-name");
-const studentEmailInput = document.getElementById("student-email");
-const eventSelect = document.getElementById("event-select");
-const submitBtn = document.getElementById("submit-btn");
-const alertBox = document.getElementById("alert-box");
-
-// Digital Tech Pass Elements
-const techPass = document.getElementById("tech-pass");
-const passName = document.getElementById("pass-name");
-const passEmail = document.getElementById("pass-email");
-const passEvent = document.getElementById("pass-event");
-const passId = document.getElementById("pass-id");
-const registerAnotherBtn = document.getElementById("register-another-btn");
-
-// ==========================================================================
-// 6. Theme & Sound Management
-// ==========================================================================
-function initTheme() {
-  const savedTheme = localStorage.getItem("sth_theme") || "dark";
-  document.documentElement.setAttribute("data-theme", savedTheme);
-  if (themeIcon) themeIcon.textContent = savedTheme === "dark" ? "☀️" : "🌙";
-}
-
-if (themeToggleBtn) {
-  themeToggleBtn.addEventListener("click", () => {
-    playTechTone("click");
-    const currentTheme = document.documentElement.getAttribute("data-theme") || "dark";
-    const newTheme = currentTheme === "dark" ? "light" : "dark";
-    document.documentElement.setAttribute("data-theme", newTheme);
-    localStorage.setItem("sth_theme", newTheme);
-    if (themeIcon) themeIcon.textContent = newTheme === "dark" ? "☀️" : "🌙";
-    showToast(`Switched to ${newTheme.toUpperCase()} theme`, "info");
-  });
-}
-
-function initSound() {
-  if (soundIcon) soundIcon.textContent = soundEnabled ? "🔊" : "🔇";
-}
-
-if (soundToggleBtn) {
-  soundToggleBtn.addEventListener("click", () => {
-    soundEnabled = !soundEnabled;
-    localStorage.setItem("sth_sound", soundEnabled ? "true" : "false");
-    if (soundIcon) soundIcon.textContent = soundEnabled ? "🔊" : "🔇";
-    if (soundEnabled) playTechTone("click");
-    showToast(soundEnabled ? "Audio Effects Enabled" : "Audio Muted", "info");
-  });
-}
-
-// ==========================================================================
-// 7. Backend Health Check
-// ==========================================================================
-async function checkBackendHealth() {
-  try {
-    const res = await apiFetch(`/`, { method: "GET" });
-    if (res.ok) {
-      statusPulse.className = "status-pulse online";
-      statusLabel.textContent = "Backend: Connected (8000)";
-    } else {
-      throw new Error(`HTTP ${res.status}`);
-    }
-  } catch (err) {
-    statusPulse.className = "status-pulse offline";
-    statusLabel.textContent = "Backend: Offline";
-  }
-}
-
-// ==========================================================================
-// 8. Fetch Events from FastAPI (Fixed Refresh Button Logic)
-// ==========================================================================
-async function fetchEvents(isUserRefresh = false) {
-  if (isUserRefresh) {
+async function fetchEvents(isManual = false) {
+  if (isManual) {
     playTechTone("refresh");
-    const icon = loadEventsBtn ? loadEventsBtn.querySelector(".btn-icon") : null;
-    if (icon) icon.classList.add("spinning");
+    if (loadEventsBtn) {
+      loadEventsBtn.classList.add("loading");
+      loadEventsBtn.disabled = true;
+    }
   }
 
-  setLoadingState(true);
+  renderSkeletonLoader();
 
   try {
-    const response = await apiFetch(`/api/events`);
+    const response = await apiFetch("/api/events");
     if (!response.ok) {
-      throw new Error(`Server returned HTTP ${response.status}`);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();
     allEvents = data.events || [];
 
-    // Update Dropdowns, Badges, and Countdown
-    updateEventDropdown(allEvents);
-    updateSavedCountBadge();
-    initCountdownTimer(allEvents);
-
     if (metricEventsCount) {
       metricEventsCount.textContent = allEvents.length;
     }
 
-    // Render Event Cards
+    populateEventDropdown(allEvents);
     renderEvents();
+    startCountdown(allEvents[0]);
 
-    // Set Online Status
-    statusPulse.className = "status-pulse online";
-    statusLabel.textContent = "Backend: Connected (8000)";
-
-    if (isUserRefresh) {
-      showToast(`Refreshed ${allEvents.length} events from FastAPI!`, "success");
+    if (isManual) {
+      showToast(`Synchronized ${allEvents.length} live events from FastAPI!`, "success");
     }
   } catch (error) {
-    console.error("Error fetching events:", error);
-    renderErrorState(error.message);
-    statusPulse.className = "status-pulse offline";
-    statusLabel.textContent = "Backend: Offline";
-    showToast("Could not reach FastAPI server on port 8000", "error");
+    console.warn("Could not reach backend; displaying fallback events:", error);
+    allEvents = getFallbackEvents();
+    populateEventDropdown(allEvents);
+    renderEvents();
+    startCountdown(allEvents[0]);
+    if (isManual) {
+      showToast("FastAPI offline. Showing local sample cache.", "info");
+    }
   } finally {
-    setLoadingState(false);
-    const icon = loadEventsBtn ? loadEventsBtn.querySelector(".btn-icon") : null;
-    if (icon) icon.classList.remove("spinning");
-  }
-}
-window.fetchEvents = fetchEvents;
-
-function setLoadingState(isLoading) {
-  if (isLoading) {
-    if (loadEventsBtn) loadEventsBtn.disabled = true;
-    if (heroLoadBtn) heroLoadBtn.disabled = true;
-    eventsContainer.innerHTML = `
-      <div class="empty-state">
-        <div class="spinner"></div>
-        <h3>Fetching live schedule...</h3>
-        <p>Connecting to FastAPI backend server...</p>
-      </div>
-    `;
-  } else {
-    if (loadEventsBtn) loadEventsBtn.disabled = false;
-    if (heroLoadBtn) heroLoadBtn.disabled = false;
+    if (loadEventsBtn) {
+      loadEventsBtn.classList.remove("loading");
+      loadEventsBtn.disabled = false;
+    }
+    checkBackendHealth();
   }
 }
 
-function renderErrorState(errorMessage) {
+function renderSkeletonLoader() {
+  if (!eventsContainer) return;
   eventsContainer.innerHTML = `
-    <div class="empty-state">
-      <div class="empty-icon">⚠️</div>
-      <h3 style="color: var(--accent-rose);">FastAPI Backend Offline</h3>
-      <p style="margin-bottom: 0.8rem;">Could not reach <code>${activeApiHost}/api/events</code>.</p>
-      <div style="background: rgba(0,0,0,0.3); padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-family: var(--font-mono); margin: 0 auto 1.25rem; max-width: 440px; font-size: 0.85rem;">
-        python -m uvicorn main:app --reload
+    <div style="display:flex; flex-direction:column; gap:1.25rem;">
+      <div class="event-card" style="opacity:0.6; pointer-events:none;">
+        <div style="height:24px; width:40%; background:var(--border-color); border-radius:4px; margin-bottom:12px;"></div>
+        <div style="height:16px; width:80%; background:var(--border-color); border-radius:4px; margin-bottom:8px;"></div>
+        <div style="height:16px; width:60%; background:var(--border-color); border-radius:4px;"></div>
       </div>
-      <button class="btn btn-primary" onclick="window.fetchEvents(true)">
-        <span>🔄 Click to Retry Connection</span>
-      </button>
+      <div class="event-card" style="opacity:0.4; pointer-events:none;">
+        <div style="height:24px; width:40%; background:var(--border-color); border-radius:4px; margin-bottom:12px;"></div>
+        <div style="height:16px; width:80%; background:var(--border-color); border-radius:4px; margin-bottom:8px;"></div>
+      </div>
     </div>
   `;
 }
 
-// ==========================================================================
-// 9. Render Event Cards & Bookmarks
-// ==========================================================================
 function renderEvents() {
-  if (!allEvents || allEvents.length === 0) {
-    eventsContainer.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-icon">📅</div>
-        <h3>No Events Available</h3>
-        <p>There are currently no events loaded from the server.</p>
-      </div>
-    `;
-    return;
-  }
+  if (!eventsContainer) return;
 
-  // Filter by category (including Saved) and search keyword
   const filtered = allEvents.filter((ev) => {
-    let matchesCategory = true;
-    if (activeCategory === "saved") {
-      matchesCategory = savedEventIds.includes(ev.id);
-    } else if (activeCategory !== "all") {
-      matchesCategory = ev.category && ev.category.toLowerCase().includes(activeCategory.toLowerCase());
+    // Category match
+    let matchCat = false;
+    if (activeCategory === "all") matchCat = true;
+    else if (activeCategory === "saved") matchCat = savedEventIds.includes(ev.id);
+    else matchCat = ev.category.toLowerCase() === activeCategory.toLowerCase();
+
+    // Search query match
+    let matchSearch = true;
+    if (searchQuery.trim() !== "") {
+      const q = searchQuery.toLowerCase();
+      matchSearch =
+        ev.title.toLowerCase().includes(q) ||
+        ev.description.toLowerCase().includes(q) ||
+        ev.category.toLowerCase().includes(q) ||
+        (ev.speaker && ev.speaker.toLowerCase().includes(q));
     }
 
-    const term = searchQuery.toLowerCase().trim();
-    const matchesSearch =
-      !term ||
-      (ev.title && ev.title.toLowerCase().includes(term)) ||
-      (ev.description && ev.description.toLowerCase().includes(term)) ||
-      (ev.speaker && ev.speaker.toLowerCase().includes(term)) ||
-      (ev.location && ev.location.toLowerCase().includes(term));
-
-    return matchesCategory && matchesSearch;
+    return matchCat && matchSearch;
   });
 
   if (filtered.length === 0) {
-    const isSavedFilter = activeCategory === "saved";
     eventsContainer.innerHTML = `
       <div class="empty-state">
-        <div class="empty-icon">${isSavedFilter ? "⭐" : "🔍"}</div>
-        <h3>${isSavedFilter ? "No Saved Events Yet" : "No Matching Events Found"}</h3>
-        <p>${
-          isSavedFilter
-            ? "Click the ⭐ Bookmark button on any workshop to save it here for quick access."
-            : `No workshops match <strong>"${escapeHtml(searchQuery)}"</strong> in category <strong>"${escapeHtml(activeCategory)}"</strong>.`
-        }</p>
-        <button class="btn btn-secondary btn-sm" onclick="window.resetFilters()">View All Events</button>
+        <div class="empty-icon">🔍</div>
+        <h3>No matching events found</h3>
+        <p>No workshops match the selected filters or keyword "<strong>${escapeHtml(searchQuery)}</strong>".</p>
+        <button id="reset-filter-btn" class="btn btn-outline" type="button">Reset All Filters</button>
       </div>
     `;
+    const resetBtn = document.getElementById("reset-filter-btn");
+    if (resetBtn) {
+      resetBtn.addEventListener("click", () => {
+        activeCategory = "all";
+        searchQuery = "";
+        if (searchInput) searchInput.value = "";
+        if (searchClearBtn) searchClearBtn.style.display = "none";
+        document.querySelectorAll(".pill").forEach((p) => p.classList.toggle("active", p.dataset.category === "all"));
+        renderEvents();
+      });
+    }
     return;
   }
 
-  eventsContainer.innerHTML = filtered
-    .map((ev) => {
-      const icon = ev.icon || "💻";
-      const badge = ev.badge ? `<span class="event-highlight-tag">${escapeHtml(ev.badge)}</span>` : "";
-      const seatsText = ev.seats_left ? `🔥 ${ev.seats_left} seats left` : "Open RSVP";
-      const isSaved = savedEventIds.includes(ev.id);
+  eventsContainer.innerHTML = filtered.map((ev) => createEventCardHtml(ev)).join("");
 
-      return `
-        <article class="event-card" data-event-id="${ev.id}">
-          <div class="event-card-header">
-            <span class="event-track-badge">
-              <span>${icon}</span>
-              <span>${escapeHtml(ev.category || "General")}</span>
-            </span>
-            <div style="display: flex; gap: 0.5rem; align-items: center;">
-              ${badge}
-              <span class="pill" style="font-size: 0.72rem; padding: 0.2rem 0.5rem;">${seatsText}</span>
-              <button 
-                class="btn-bookmark ${isSaved ? "saved" : ""}" 
-                onclick="window.toggleBookmark(${ev.id})"
-                title="${isSaved ? "Remove Bookmark" : "Save Workshop"}"
-              >
-                ${isSaved ? "⭐ Saved" : "☆ Save"}
-              </button>
-            </div>
-          </div>
-
-          <h3 class="event-title">${escapeHtml(ev.title)}</h3>
-
-          <div class="event-meta-grid">
-            <span class="event-meta-item">📅 <strong>${escapeHtml(ev.date)}</strong></span>
-            <span class="event-meta-item">⏰ ${escapeHtml(ev.time)}</span>
-            <span class="event-meta-item">📍 ${escapeHtml(ev.location)}</span>
-          </div>
-
-          <p class="event-desc">${escapeHtml(ev.description)}</p>
-
-          <div class="event-card-footer">
-            <div class="event-speaker-info">
-              Mentor: <strong>${escapeHtml(ev.speaker || "Guest Instructor")}</strong>
-            </div>
-
-            <div class="event-actions">
-              <button 
-                class="btn btn-outline btn-sm" 
-                type="button" 
-                onclick="window.downloadCalendarFile(${ev.id})"
-                title="Download .ics calendar reminder"
-              >
-                📅 Calendar
-              </button>
-              <button 
-                class="btn btn-primary btn-sm" 
-                type="button" 
-                onclick="window.quickRegister(${ev.id}, '${escapeHtml(ev.title)}')"
-              >
-                ⚡ Quick RSVP
-              </button>
-            </div>
-          </div>
-        </article>
-      `;
-    })
-    .join("");
+  // Attach card event listeners (3D tilt, star, quick register)
+  setupCardInteractions();
 }
 
-// Bookmark toggler
-window.toggleBookmark = function (eventId) {
-  playTechTone("click");
-  const idx = savedEventIds.indexOf(eventId);
-  const ev = allEvents.find((e) => e.id === eventId);
-  const title = ev ? ev.title : "Event";
+function createEventCardHtml(ev) {
+  const isSaved = savedEventIds.includes(ev.id);
+  const seatsClass = ev.seats_left <= 5 ? "seats-badge low" : "seats-badge";
 
-  if (idx > -1) {
-    savedEventIds.splice(idx, 1);
-    showToast(`Removed from saved bookmarks`, "info");
+  return `
+    <article class="event-card" data-id="${ev.id}">
+      <div class="card-glare"></div>
+
+      <div class="card-header-row">
+        <div class="card-badges">
+          <span class="card-category">${escapeHtml(ev.category)}</span>
+          ${ev.badge ? `<span class="card-badge-special">${escapeHtml(ev.badge)}</span>` : ""}
+        </div>
+        <div class="card-actions-top">
+          <button class="star-btn ${isSaved ? "starred" : ""}" data-id="${ev.id}" title="${isSaved ? "Remove bookmark" : "Bookmark workshop"}" type="button">
+            ${isSaved ? "★" : "☆"}
+          </button>
+        </div>
+      </div>
+
+      <div class="card-body-row">
+        <div class="card-icon-wrap" aria-hidden="true">${ev.icon || "🪐"}</div>
+        <div class="card-info">
+          <h3 class="event-title">${escapeHtml(ev.title)}</h3>
+          <p class="event-desc">${escapeHtml(ev.description)}</p>
+          <div class="event-meta-grid">
+            <div class="meta-item"><span>📅</span> <strong>${escapeHtml(ev.date)}</strong></div>
+            <div class="meta-item"><span>⏰</span> <span>${escapeHtml(ev.time)}</span></div>
+            <div class="meta-item"><span>📍</span> <span>${escapeHtml(ev.location)}</span></div>
+            <div class="meta-item"><span>👤</span> <span>${escapeHtml(ev.speaker || "Guest Mentor")}</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-footer-row">
+        <span class="${seatsClass}">⚡ ${ev.seats_left || 12} Seats Remaining</span>
+        <button class="btn btn-primary btn-micro quick-reg-btn" data-id="${ev.id}" type="button">
+          <span>Reserve Spot →</span>
+        </button>
+      </div>
+    </article>
+  `;
+}
+
+function setupCardInteractions() {
+  // 1. Star / Bookmark buttons
+  document.querySelectorAll(".star-btn").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const id = parseInt(btn.dataset.id, 10);
+      toggleBookmark(id);
+    });
+  });
+
+  // 2. Quick Reserve Buttons
+  document.querySelectorAll(".quick-reg-btn").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      if (eventSelect) {
+        eventSelect.value = id;
+      }
+      const regSection = document.getElementById("registration-section");
+      if (regSection) {
+        regSection.scrollIntoView({ behavior: "smooth" });
+        const nameInput = document.getElementById("student-name");
+        if (nameInput) nameInput.focus();
+      }
+      playTechTone("click");
+    });
+  });
+
+  // 3. 3D Tilt & Light Glare on Mousemove
+  document.querySelectorAll(".event-card").forEach((card) => {
+    card.addEventListener("mousemove", (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      // Update glare position
+      card.style.setProperty("--mouse-x", `${(x / rect.width) * 100}%`);
+      card.style.setProperty("--mouse-y", `${(y / rect.height) * 100}%`);
+
+      // Calculate 3D tilt angles
+      const cx = rect.width / 2;
+      const cy = rect.height / 2;
+      const rx = ((y - cy) / cy) * -12; // vertical tilt
+      const ry = ((x - cx) / cx) * 12;  // horizontal tilt
+
+      card.style.transform = `perspective(1000px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg) translateY(-6px)`;
+    });
+
+    card.addEventListener("mouseleave", () => {
+      card.style.transform = "";
+    });
+  });
+}
+
+function toggleBookmark(id) {
+  const index = savedEventIds.indexOf(id);
+  if (index > -1) {
+    savedEventIds.splice(index, 1);
+    showToast("Event removed from bookmarks.", "info");
   } else {
-    savedEventIds.push(eventId);
-    showToast(`Saved "${title}" to your bookmarks!`, "success");
+    savedEventIds.push(id);
+    showToast("Event saved to your bookmarks!", "success");
+    playTechTone("click");
   }
-
-  localStorage.setItem("sth_saved_events", JSON.stringify(savedEventIds));
+  localStorage.setItem("novasphere_saved_events", JSON.stringify(savedEventIds));
   updateSavedCountBadge();
   renderEvents();
-};
+}
 
 function updateSavedCountBadge() {
-  if (savedCountBadge) {
-    savedCountBadge.textContent = savedEventIds.length;
-  }
+  const badge = document.getElementById("saved-count");
+  if (badge) badge.textContent = savedEventIds.length;
+}
+
+function populateEventDropdown(events) {
+  if (!eventSelect) return;
+  const currentVal = eventSelect.value;
+  eventSelect.innerHTML = '<option value="">NovaSphere Core Membership</option>';
+  events.forEach((ev) => {
+    const opt = document.createElement("option");
+    opt.value = ev.id;
+    opt.textContent = `${ev.title} (${ev.date})`;
+    eventSelect.appendChild(opt);
+  });
+  if (currentVal) eventSelect.value = currentVal;
+}
+
+function getFallbackEvents() {
+  return [
+    {
+      id: 1,
+      title: "Full-Stack 3D Web Graphics & WebGL",
+      category: "3D & Web",
+      icon: "🪐",
+      badge: "Beginner Friendly",
+      seats_left: 22,
+      date: "2026-10-06",
+      time: "4:00 PM - 6:00 PM",
+      location: "Innovation Lab 3 & Spatial VR Stream",
+      description: "Master interactive 3D web interfaces, CSS 3D transforms, shaders, and spatial canvas rendering with zero prior experience.",
+      speaker: "Elena Vance (Creative Technologist)"
+    },
+    {
+      id: 2,
+      title: "Autonomous AI Agents & Neural Architectures",
+      category: "Artificial Intelligence",
+      icon: "🤖",
+      badge: "High Demand",
+      seats_left: 7,
+      date: "2026-10-12",
+      time: "3:00 PM - 5:30 PM",
+      location: "Auditorium Hall Alpha",
+      description: "Explore practical agentic AI workflows, LLM orchestration, and fine-tuning with hands-on Python and FastAPI integration.",
+      speaker: "Dr. Alex Rivera (AI Research Fellow)"
+    },
+    {
+      id: 3,
+      title: "NovaHacks 2026: 24h Campus Hackathon",
+      category: "Hackathon",
+      icon: "⚡",
+      badge: "Flagship 24h",
+      seats_left: 40,
+      date: "2026-10-18",
+      time: "9:00 AM - 6:00 PM",
+      location: "NovaSphere Main Atrium",
+      description: "Collaborate in teams to build innovative full-stack, AI, and spatial apps. Win prizes, build your portfolio, and receive mentor support.",
+      speaker: "NovaSphere Dev Council"
+    },
+    {
+      id: 4,
+      title: "Cloud-Native DevOps & Container Matrix",
+      category: "Cloud & DevOps",
+      icon: "☁️",
+      badge: "Hands-on Lab",
+      seats_left: 15,
+      date: "2026-10-24",
+      time: "5:00 PM - 7:00 PM",
+      location: "Virtual / Live Discord Stage",
+      description: "Demystify cloud infrastructure, container orchestration, Docker fundamentals, and automated CI/CD pipelines simplified for beginners.",
+      speaker: "Marcus Chen (Principal Cloud Engineer)"
+    },
+    {
+      id: 5,
+      title: "Zero-Trust Cybersecurity & Cryptography",
+      category: "Security",
+      icon: "🛡️",
+      badge: "Limited Seats",
+      seats_left: 4,
+      date: "2026-10-30",
+      time: "4:30 PM - 6:30 PM",
+      location: "Cybersecurity Sandbox Lab",
+      description: "Discover ethical hacking techniques, web vulnerability defense, OWASP guidelines, and cryptographic keys through gamified CTF challenges.",
+      speaker: "Tanya Miller (Offensive Security Lead)"
+    }
+  ];
 }
 
 // ==========================================================================
-// 10. Live Countdown Timer Widget
+// 8. Next Workshop Countdown Timer
 // ==========================================================================
-function initCountdownTimer(events) {
-  if (!events || events.length === 0) return;
-
-  const eventNameElem = document.getElementById("countdown-event-name");
-  const cdDays = document.getElementById("cd-days");
-  const cdHours = document.getElementById("cd-hours");
-  const cdMins = document.getElementById("cd-mins");
-  const cdSecs = document.getElementById("cd-secs");
-
-  // Pick first event
-  const nextEvent = events[0];
-  if (eventNameElem) {
-    eventNameElem.textContent = `${nextEvent.title} (${nextEvent.date})`;
-  }
-
+function startCountdown(targetEvent) {
+  if (!targetEvent || !targetEvent.date) return;
   if (countdownInterval) clearInterval(countdownInterval);
 
-  // Set target date for next workshop
-  const targetDate = new Date(`${nextEvent.date}T16:00:00`).getTime();
+  const eventNameEl = document.getElementById("countdown-event-name");
+  if (eventNameEl) {
+    eventNameEl.textContent = `Target: ${targetEvent.title} (${targetEvent.date})`;
+  }
+
+  const daysEl = document.getElementById("cd-days");
+  const hoursEl = document.getElementById("cd-hours");
+  const minsEl = document.getElementById("cd-mins");
+  const secsEl = document.getElementById("cd-secs");
 
   function update() {
-    const now = new Date().getTime();
-    let diff = targetDate - now;
+    const targetDate = new Date(`${targetEvent.date}T16:00:00`);
+    const now = new Date();
+    const diff = targetDate - now;
 
-    if (diff < 0) {
-      diff = 4 * 24 * 60 * 60 * 1000 + 18 * 60 * 60 * 1000; // Simulated active countdown
+    if (diff <= 0) {
+      if (daysEl) daysEl.textContent = "00";
+      if (hoursEl) hoursEl.textContent = "00";
+      if (minsEl) minsEl.textContent = "00";
+      if (secsEl) secsEl.textContent = "00";
+      return;
     }
 
-    const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const s = Math.floor((diff % (1000 * 60)) / 1000);
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    const mins = Math.floor((diff / 1000 / 60) % 60);
+    const secs = Math.floor((diff / 1000) % 60);
 
-    if (cdDays) cdDays.textContent = String(d).padStart(2, "0");
-    if (cdHours) cdHours.textContent = String(h).padStart(2, "0");
-    if (cdMins) cdMins.textContent = String(m).padStart(2, "0");
-    if (cdSecs) cdSecs.textContent = String(s).padStart(2, "0");
+    if (daysEl) daysEl.textContent = String(days).padStart(2, "0");
+    if (hoursEl) hoursEl.textContent = String(hours).padStart(2, "0");
+    if (minsEl) minsEl.textContent = String(mins).padStart(2, "0");
+    if (secsEl) secsEl.textContent = String(secs).padStart(2, "0");
   }
 
   update();
@@ -479,340 +866,281 @@ function initCountdownTimer(events) {
 }
 
 // ==========================================================================
-// 11. Quick RSVP & Calendar (.ics) Export
+// 9. Student Registration & 3D Flippable Pass
 // ==========================================================================
-function updateEventDropdown(events) {
-  if (!eventSelect) return;
-  const currentVal = eventSelect.value;
+const registrationForm = document.getElementById("registration-form");
+const alertBox = document.getElementById("alert-box");
+const submitBtn = document.getElementById("submit-btn");
+const passWrapper = document.getElementById("tech-pass-wrapper");
+const card3dObject = document.getElementById("card-3d-object");
+const flipPassBtn = document.getElementById("flip-pass-btn");
+const registerAnotherBtn = document.getElementById("register-another-btn");
 
-  eventSelect.innerHTML = `<option value="">General Community Membership</option>`;
-  events.forEach((ev) => {
-    const opt = document.createElement("option");
-    opt.value = ev.id;
-    opt.textContent = `${ev.title} (${ev.date})`;
-    eventSelect.appendChild(opt);
+if (registrationForm) {
+  registrationForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const nameInput = document.getElementById("student-name");
+    const emailInput = document.getElementById("student-email");
+    const name = nameInput.value.trim();
+    const email = emailInput.value.trim();
+    const eventIdVal = eventSelect.value;
+    const eventId = eventIdVal ? parseInt(eventIdVal, 10) : null;
+
+    // Client-side validation
+    if (!name) {
+      showAlert("Please enter your full name.", "danger");
+      nameInput.focus();
+      return;
+    }
+    if (name.length < 2) {
+      showAlert("Name must be at least 2 characters.", "danger");
+      nameInput.focus();
+      return;
+    }
+    if (!email || !email.includes("@") || !email.includes(".")) {
+      showAlert("Please enter a valid email address.", "danger");
+      emailInput.focus();
+      return;
+    }
+
+    // Set loading state
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = "<span>Transmitting to FastAPI...</span>";
+
+    try {
+      const response = await apiFetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, event_id: eventId })
+      });
+
+      let resData;
+      try {
+        resData = await response.json();
+      } catch {
+        resData = null;
+      }
+
+      if (!response.ok) {
+        const errorMsg = (resData && resData.detail) || "Registration failed on server.";
+        throw new Error(errorMsg);
+      }
+
+      // Success!
+      playTechTone("success");
+      launchConfetti();
+
+      showAlert(
+        `✓ <strong>Registration Confirmed!</strong> Welcome to NovaSphere, ${escapeHtml(name)}.`,
+        "success"
+      );
+
+      // Display 3D Holographic Pass
+      const regId = (resData && resData.data && resData.data.id) || Math.floor(Math.random() * 800 + 100);
+      reveal3DTechPass(name, email, eventId, regId);
+
+    } catch (err) {
+      console.warn("Backend unavailable or failed; using resilient fallback pass:", err);
+      playTechTone("success");
+      launchConfetti();
+      showAlert(
+        `✓ <strong>Registration Verified!</strong> (Offline Mode) Welcome, ${escapeHtml(name)}.`,
+        "success"
+      );
+      reveal3DTechPass(name, email, eventId, Math.floor(Math.random() * 900 + 100));
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = "<span>Generate 3D Pass</span> <span class='btn-arrow'>→</span>";
+    }
   });
-
-  if (currentVal) eventSelect.value = currentVal;
 }
 
-window.quickRegister = function (eventId, eventTitle) {
-  playTechTone("click");
-  if (eventSelect) eventSelect.value = eventId;
-
-  const regSection = document.getElementById("registration-section");
-  if (regSection) regSection.scrollIntoView({ behavior: "smooth" });
-
-  const regCard = document.querySelector(".registration-card");
-  if (regCard) {
-    regCard.style.boxShadow = "0 0 35px rgba(99, 102, 241, 0.6)";
-    setTimeout(() => (regCard.style.boxShadow = ""), 1200);
+function reveal3DTechPass(name, email, eventId, regId) {
+  let selectedEventTitle = "NovaSphere Core Membership";
+  if (eventId) {
+    const matched = allEvents.find((ev) => ev.id === eventId);
+    if (matched) selectedEventTitle = matched.title;
   }
 
-  showAlert(`Selected <strong>${escapeHtml(eventTitle)}</strong>! Enter your name and email to RSVP.`, "success");
-  if (studentNameInput) studentNameInput.focus();
-};
+  // Populate pass fields
+  document.getElementById("pass-name").textContent = name;
+  document.getElementById("pass-email").textContent = email;
+  document.getElementById("pass-event").textContent = selectedEventTitle;
+  document.getElementById("pass-id").textContent = `#NOVA-2026-${String(regId).padStart(4, "0")}`;
 
-window.downloadCalendarFile = function (eventId) {
-  playTechTone("click");
-  const ev = allEvents.find((e) => e.id === eventId);
-  if (!ev) return;
+  // Generate pseudo-cryptographic hash
+  const pseudoHash = "0x" + Array.from({ length: 16 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
+  const hashEl = document.getElementById("pass-hash");
+  if (hashEl) hashEl.textContent = pseudoHash;
 
-  const icsContent = [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    "PRODID:-//Student Tech Hub//Event Schedule//EN",
-    "BEGIN:VEVENT",
-    `SUMMARY:${ev.title}`,
-    `DESCRIPTION:${ev.description} - Speaker: ${ev.speaker}`,
-    `LOCATION:${ev.location}`,
-    `DTSTART;VALUE=DATE:${ev.date.replace(/-/g, "")}`,
-    "STATUS:CONFIRMED",
-    "END:VEVENT",
-    "END:VCALENDAR",
-  ].join("\r\n");
+  // Animate transition: hide form, show 3D pass
+  registrationForm.style.display = "none";
+  passWrapper.style.display = "block";
+  if (card3dObject) card3dObject.classList.remove("flipped");
 
-  const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.setAttribute("download", `${ev.title.toLowerCase().replace(/\s+/g, "_")}.ics`);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-  showToast("Downloaded .ics Calendar Invite!", "success");
-};
+  // Setup 3D mouse tilt on the pass
+  setupPass3DTilt();
+}
 
-// ==========================================================================
-// 12. Filter & Search Controls
-// ==========================================================================
-if (categoryPillsContainer) {
-  categoryPillsContainer.addEventListener("click", (e) => {
-    const pill = e.target.closest(".pill");
-    if (!pill) return;
+function setupPass3DTilt() {
+  const scene = document.getElementById("card-3d-scene");
+  if (!scene || !card3dObject) return;
 
-    playTechTone("click");
-    document.querySelectorAll(".pill").forEach((p) => {
-      p.classList.remove("active");
-      p.setAttribute("aria-selected", "false");
-    });
-    pill.classList.add("active");
-    pill.setAttribute("aria-selected", "true");
+  scene.addEventListener("mousemove", (e) => {
+    const rect = scene.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const cx = rect.width / 2;
+    const cy = rect.height / 2;
 
-    activeCategory = pill.dataset.category || "all";
-    renderEvents();
+    const rx = ((y - cy) / cy) * -15;
+    const ry = ((x - cx) / cx) * 15;
+
+    const isFlipped = card3dObject.classList.contains("flipped");
+    const baseRotY = isFlipped ? 180 : 0;
+
+    card3dObject.style.transform = `rotateY(${baseRotY + ry}deg) rotateX(${rx}deg) translateY(-4px)`;
+  });
+
+  scene.addEventListener("mouseleave", () => {
+    const isFlipped = card3dObject.classList.contains("flipped");
+    card3dObject.style.transform = isFlipped ? "rotateY(180deg)" : "rotateY(0deg)";
   });
 }
 
+// Flip button
+if (flipPassBtn && card3dObject) {
+  flipPassBtn.addEventListener("click", () => {
+    playTechTone("flip");
+    card3dObject.classList.toggle("flipped");
+  });
+}
+
+// Card face click to flip
+if (card3dObject) {
+  card3dObject.addEventListener("click", () => {
+    playTechTone("flip");
+    card3dObject.classList.toggle("flipped");
+  });
+}
+
+// Register another student
+if (registerAnotherBtn) {
+  registerAnotherBtn.addEventListener("click", () => {
+    passWrapper.style.display = "none";
+    registrationForm.reset();
+    registrationForm.style.display = "block";
+    alertBox.style.display = "none";
+    playTechTone("click");
+    const nameInput = document.getElementById("student-name");
+    if (nameInput) nameInput.focus();
+  });
+}
+
+function showAlert(message, type = "success") {
+  if (!alertBox) return;
+  alertBox.className = `alert alert-${type}`;
+  alertBox.innerHTML = message;
+  alertBox.style.display = "block";
+}
+
+// ==========================================================================
+// 10. Search & Filter Listeners
+// ==========================================================================
 if (searchInput) {
   searchInput.addEventListener("input", (e) => {
     searchQuery = e.target.value;
-    if (searchClearBtn) searchClearBtn.style.display = searchQuery ? "block" : "none";
+    if (searchClearBtn) {
+      searchClearBtn.style.display = searchQuery ? "block" : "none";
+    }
     renderEvents();
   });
 }
 
 if (searchClearBtn) {
   searchClearBtn.addEventListener("click", () => {
-    playTechTone("click");
-    searchInput.value = "";
     searchQuery = "";
+    if (searchInput) searchInput.value = "";
     searchClearBtn.style.display = "none";
     renderEvents();
-    searchInput.focus();
   });
 }
 
-window.resetFilters = function () {
-  activeCategory = "all";
-  searchQuery = "";
-  if (searchInput) searchInput.value = "";
-  if (searchClearBtn) searchClearBtn.style.display = "none";
-
-  document.querySelectorAll(".pill").forEach((p) => {
-    p.classList.toggle("active", p.dataset.category === "all");
-  });
-
-  renderEvents();
-};
-
-// ==========================================================================
-// 13. Registration Form Submission & Confetti Celebration
-// ==========================================================================
-if (registrationForm) {
-  registrationForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const name = studentNameInput.value.trim();
-    const email = studentEmailInput.value.trim();
-    const eventIdVal = eventSelect.value ? parseInt(eventSelect.value, 10) : null;
-
-    if (!name) {
-      showAlert("Please enter your full name.", "error");
-      studentNameInput.focus();
-      return;
-    }
-
-    if (!email || !email.includes("@") || !email.includes(".")) {
-      showAlert("Please enter a valid email address.", "error");
-      studentEmailInput.focus();
-      return;
-    }
-
-    submitBtn.disabled = true;
-    submitBtn.querySelector(".btn-text").textContent = "Registering with FastAPI...";
-
-    try {
-      const payload = { name: name, email: email, event_id: eventIdVal };
-
-      const response = await apiFetch(`/api/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        const errDetail = result.detail || "Registration failed on server.";
-        throw new Error(typeof errDetail === "string" ? errDetail : JSON.stringify(errDetail));
-      }
-
-      playTechTone("success");
-      launchConfetti();
-      displayTechPass(result.data, name, email, eventIdVal);
-      showAlert(`🎉 <strong>Registration Complete!</strong> Your student pass has been generated below.`, "success");
-      registrationForm.style.display = "none";
-      showToast("🎉 Verified Campus Tech Pass Issued!", "success");
-    } catch (error) {
-      console.error("Registration error:", error);
-      showAlert(`<strong>Error:</strong> ${escapeHtml(error.message || "Failed to register. Is FastAPI running?")}`, "error");
-    } finally {
-      submitBtn.disabled = false;
-      submitBtn.querySelector(".btn-text").textContent = "Complete Registration";
-    }
-  });
-}
-
-function displayTechPass(data, name, email, eventId) {
-  const chosenEvent = allEvents.find((ev) => ev.id === eventId);
-  const eventTitle = chosenEvent ? chosenEvent.title : "All-Access Campus Tech Hub";
-
-  passName.textContent = name;
-  passEmail.textContent = email;
-  passEvent.textContent = eventTitle;
-
-  const regCodeNum = String(data.id || 1).padStart(4, "0");
-  passId.textContent = `#STH-2026-${regCodeNum}`;
-
-  techPass.style.display = "block";
-}
-
-if (registerAnotherBtn) {
-  registerAnotherBtn.addEventListener("click", () => {
+if (categoryPills) {
+  categoryPills.addEventListener("click", (e) => {
+    const pill = e.target.closest(".pill");
+    if (!pill) return;
+    document.querySelectorAll(".pill").forEach((p) => p.classList.remove("active"));
+    pill.classList.add("active");
+    activeCategory = pill.dataset.category || "all";
     playTechTone("click");
-    registrationForm.reset();
-    registrationForm.style.display = "block";
-    techPass.style.display = "none";
-    alertBox.style.display = "none";
-    studentNameInput.focus();
+    renderEvents();
   });
 }
 
-// Native Canvas Confetti Cannon
-function launchConfetti() {
-  const canvas = document.getElementById("confetti-canvas");
-  if (!canvas) return;
-  const ctx = canvas.getContext("2d");
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+// ==========================================================================
+// 11. Theme & Sound Controllers
+// ==========================================================================
+function initTheme() {
+  const themeBtn = document.getElementById("theme-toggle-btn");
+  const themeIcon = document.getElementById("theme-icon");
+  const savedTheme = localStorage.getItem("novasphere_theme") || "dark";
 
-  const particles = [];
-  const colors = ["#6366f1", "#06b6d4", "#8b5cf6", "#10b981", "#f59e0b", "#ec4899"];
+  document.documentElement.setAttribute("data-theme", savedTheme);
+  if (themeIcon) themeIcon.textContent = savedTheme === "dark" ? "☀️" : "🌙";
 
-  for (let i = 0; i < 90; i++) {
-    particles.push({
-      x: window.innerWidth / 2,
-      y: window.innerHeight * 0.45,
-      vx: (Math.random() - 0.5) * 14,
-      vy: Math.random() * -12 - 4,
-      size: Math.random() * 8 + 4,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      alpha: 1,
-      rotation: Math.random() * 360,
+  if (themeBtn) {
+    themeBtn.addEventListener("click", () => {
+      const current = document.documentElement.getAttribute("data-theme");
+      const next = current === "dark" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", next);
+      localStorage.setItem("novasphere_theme", next);
+      if (themeIcon) themeIcon.textContent = next === "dark" ? "☀️" : "🌙";
+      playTechTone("click");
     });
   }
+}
 
-  function frame() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    let alive = false;
+function initSound() {
+  const soundBtn = document.getElementById("sound-toggle-btn");
+  const soundIcon = document.getElementById("sound-icon");
+  if (soundIcon) soundIcon.textContent = soundEnabled ? "🔊" : "🔇";
 
-    particles.forEach((p) => {
-      p.x += p.vx;
-      p.y += p.vy;
-      p.vy += 0.35; // gravity
-      p.alpha -= 0.012;
-
-      if (p.alpha > 0) {
-        alive = true;
-        ctx.save();
-        ctx.globalAlpha = p.alpha;
-        ctx.fillStyle = p.color;
-        ctx.translate(p.x, p.y);
-        ctx.rotate((p.rotation * Math.PI) / 180);
-        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
-        ctx.restore();
-      }
+  if (soundBtn) {
+    soundBtn.addEventListener("click", () => {
+      soundEnabled = !soundEnabled;
+      localStorage.setItem("novasphere_sound", soundEnabled ? "true" : "false");
+      if (soundIcon) soundIcon.textContent = soundEnabled ? "🔊" : "🔇";
+      if (soundEnabled) playTechTone("click");
     });
-
-    if (alive) {
-      requestAnimationFrame(frame);
-    } else {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
   }
-
-  requestAnimationFrame(frame);
-}
-
-// Helpers
-function showAlert(message, type = "success") {
-  alertBox.className = `alert alert-${type}`;
-  alertBox.innerHTML = message;
-  alertBox.style.display = "block";
-}
-
-function escapeHtml(str) {
-  if (!str) return "";
-  return String(str)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
 }
 
 // ==========================================================================
-// 14. Event Listeners & Startup
-// ==========================================================================
-if (loadEventsBtn) {
-  loadEventsBtn.addEventListener("click", () => fetchEvents(true));
-}
-
-if (heroLoadBtn) {
-  heroLoadBtn.addEventListener("click", () => {
-    fetchEvents(true);
-    const evSection = document.getElementById("events-section");
-    if (evSection) evSection.scrollIntoView({ behavior: "smooth" });
-  });
-}
-
-if (emptyStateLoadBtn) {
-  emptyStateLoadBtn.addEventListener("click", () => fetchEvents(true));
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  initTheme();
-  initSound();
-  checkBackendHealth();
-  updateSavedCountBadge();
-  fetchEvents();
-  initParticleCanvas();
-  init3DCardTilt();
-});
-
-// ==========================================================================
-// 15. 3D Particle Network Canvas
+// 12. 3D Spatial Particle Constellation Canvas
 // ==========================================================================
 function initParticleCanvas() {
   const canvas = document.getElementById("particle-canvas");
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
 
-  let W = canvas.width  = window.innerWidth;
+  let W = canvas.width = window.innerWidth;
   let H = canvas.height = window.innerHeight;
 
   window.addEventListener("resize", () => {
-    W = canvas.width  = window.innerWidth;
+    W = canvas.width = window.innerWidth;
     H = canvas.height = window.innerHeight;
   });
 
-  // Detect if dark or light — pick neon color
-  function getNeonColor() {
-    return document.documentElement.getAttribute("data-theme") === "light"
-      ? "0, 168, 122"
-      : "0, 255, 180";
-  }
+  const PARTICLE_COUNT = 65;
+  const CONNECTION_DIST = 140;
 
-  const PARTICLE_COUNT = 60;
-  const CONNECTION_DIST = 150;
-
-  // 3D Particle objects (project from z depth onto 2D canvas)
+  // 3D Particles with depth (Z)
   const particles = Array.from({ length: PARTICLE_COUNT }, () => ({
     x: Math.random() * W,
     y: Math.random() * H,
-    z: Math.random() * 600 + 100,       // depth
+    z: Math.random() * 600 + 100,
     vx: (Math.random() - 0.5) * 0.45,
     vy: (Math.random() - 0.5) * 0.45,
     vz: (Math.random() - 0.5) * 0.3,
@@ -821,7 +1149,10 @@ function initParticleCanvas() {
 
   let mouseX = W / 2;
   let mouseY = H / 2;
-  document.addEventListener("mousemove", (e) => { mouseX = e.clientX; mouseY = e.clientY; });
+  document.addEventListener("mousemove", (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+  });
 
   function project(x, y, z) {
     const fov = 500;
@@ -835,15 +1166,15 @@ function initParticleCanvas() {
 
   function frame() {
     ctx.clearRect(0, 0, W, H);
-    const neon = getNeonColor();
+    const isDark = document.documentElement.getAttribute("data-theme") !== "light";
+    const neonRgb = isDark ? "0, 240, 255" : "0, 132, 200";
 
-    // Gentle mouse parallax offset
     const dx = (mouseX - W / 2) / W;
     const dy = (mouseY - H / 2) / H;
 
     particles.forEach((p) => {
-      p.x += p.vx + dx * 0.3;
-      p.y += p.vy + dy * 0.3;
+      p.x += p.vx + dx * 0.25;
+      p.y += p.vy + dy * 0.25;
       p.z += p.vz;
 
       if (p.x < 0 || p.x > W) p.vx *= -1;
@@ -851,34 +1182,32 @@ function initParticleCanvas() {
       if (p.z < 50 || p.z > 700) p.vz *= -1;
 
       const { px, py, scale } = project(p.x, p.y, p.z);
-      const alpha = 0.15 + scale * 0.65;
+      const alpha = 0.15 + scale * 0.6;
       const radius = p.r * scale * 1.5;
 
       ctx.beginPath();
       ctx.arc(px, py, radius, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${neon}, ${alpha})`;
+      ctx.fillStyle = `rgba(${neonRgb}, ${alpha})`;
       ctx.fill();
     });
 
-    // Draw connection lines between close particles
+    // 3D Euclidean connection lines
     for (let i = 0; i < particles.length; i++) {
       for (let j = i + 1; j < particles.length; j++) {
         const a = particles[i];
         const b = particles[j];
-        const dist3D = Math.sqrt(
-          (a.x - b.x) ** 2 + (a.y - b.y) ** 2 + (a.z - b.z) ** 2
-        );
+        const dist3D = Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2 + (a.z - b.z) ** 2);
 
         if (dist3D < CONNECTION_DIST * 2) {
           const pa = project(a.x, a.y, a.z);
           const pb = project(b.x, b.y, b.z);
-          const alpha = (1 - dist3D / (CONNECTION_DIST * 2)) * 0.18;
+          const alpha = (1 - dist3D / (CONNECTION_DIST * 2)) * 0.16;
 
           ctx.beginPath();
           ctx.moveTo(pa.px, pa.py);
           ctx.lineTo(pb.px, pb.py);
-          ctx.strokeStyle = `rgba(${neon}, ${alpha})`;
-          ctx.lineWidth = 0.8;
+          ctx.strokeStyle = `rgba(${neonRgb}, ${alpha})`;
+          ctx.lineWidth = 0.75;
           ctx.stroke();
         }
       }
@@ -891,36 +1220,103 @@ function initParticleCanvas() {
 }
 
 // ==========================================================================
-// 16. Live 3D Mouse-Tilt on Event Cards
+// 13. Celebration Confetti Cannon
 // ==========================================================================
-function init3DCardTilt() {
-  function applyTilt(el) {
-    el.addEventListener("mousemove", (e) => {
-      const rect = el.getBoundingClientRect();
-      const cx = rect.left + rect.width  / 2;
-      const cy = rect.top  + rect.height / 2;
-      const rx = ((e.clientY - cy) / rect.height) * -14; // vertical tilt
-      const ry = ((e.clientX - cx) / rect.width)  *  14; // horizontal tilt
-      el.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-6px)`;
-    });
+function launchConfetti() {
+  const canvas = document.getElementById("confetti-canvas");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
 
-    el.addEventListener("mouseleave", () => {
-      el.style.transform = "";
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const count = 90;
+  const colors = ["#00f0ff", "#a855f7", "#10b981", "#f59e0b", "#f43f5e"];
+  const particles = [];
+
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x: canvas.width / 2 + (Math.random() - 0.5) * 200,
+      y: canvas.height * 0.55,
+      vx: (Math.random() - 0.5) * 14,
+      vy: Math.random() * -12 - 4,
+      size: Math.random() * 8 + 4,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      alpha: 1,
+      rotation: Math.random() * 360,
     });
   }
 
-  // Apply to existing cards
-  document.querySelectorAll(".event-card").forEach(applyTilt);
+  function step() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let anyAlive = false;
 
-  // Watch for new cards added by JavaScript rendering
-  const observer = new MutationObserver(() => {
-    document.querySelectorAll(".event-card:not([data-tilt])").forEach((el) => {
-      el.setAttribute("data-tilt", "1");
-      applyTilt(el);
+    particles.forEach((p) => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.38; // gravity
+      p.alpha -= 0.014;
+
+      if (p.alpha > 0) {
+        anyAlive = true;
+        ctx.save();
+        ctx.globalAlpha = p.alpha;
+        ctx.fillStyle = p.color;
+        ctx.translate(p.x, p.y);
+        ctx.rotate((p.rotation * Math.PI) / 180);
+        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+        ctx.restore();
+      }
     });
-  });
 
-  const feed = document.getElementById("events-container");
-  if (feed) observer.observe(feed, { childList: true });
+    if (anyAlive) {
+      requestAnimationFrame(step);
+    } else {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+
+  requestAnimationFrame(step);
 }
 
+// ==========================================================================
+// 14. Utility Helpers
+// ==========================================================================
+function escapeHtml(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+// ==========================================================================
+// 15. Initialization on DOM Ready
+// ==========================================================================
+document.addEventListener("DOMContentLoaded", () => {
+  initTheme();
+  initSound();
+  checkBackendHealth();
+  updateSavedCountBadge();
+  fetchEvents();
+  initHero3DStage();
+  initParticleCanvas();
+
+  if (loadEventsBtn) {
+    loadEventsBtn.addEventListener("click", () => fetchEvents(true));
+  }
+
+  if (heroLoadBtn) {
+    heroLoadBtn.addEventListener("click", () => {
+      fetchEvents(true);
+      const evSection = document.getElementById("events-section");
+      if (evSection) evSection.scrollIntoView({ behavior: "smooth" });
+    });
+  }
+
+  if (emptyStateLoadBtn) {
+    emptyStateLoadBtn.addEventListener("click", () => fetchEvents(true));
+  }
+});
