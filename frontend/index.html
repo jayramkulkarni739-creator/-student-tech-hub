@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Tech Hub | Campus Innovation & Workshops</title>
+  <meta name="description" content="Discover student-led tech workshops, hackathons, and developer bootcamps. Learn, build, and connect.">
+  
+  <!-- Modern Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Ambient Glow Gradients in Background -->
+  <div class="ambient-glow glow-1" aria-hidden="true"></div>
+  <div class="ambient-glow glow-2" aria-hidden="true"></div>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="#" class="brand-logo">
+        <span class="logo-icon">⚡</span>
+        <span class="logo-text">Student <span>Tech Hub</span></span>
+      </a>
+
+      <div class="nav-actions">
+        <!-- Live API Status Indicator -->
+        <div class="api-status-badge" id="api-status-badge" title="FastAPI Backend Health">
+          <span class="status-pulse" id="status-pulse"></span>
+          <span class="status-label" id="status-label">Checking Backend...</span>
+        </div>
+
+        <!-- Audio FX Toggle -->
+        <button id="sound-toggle-btn" class="theme-toggle" type="button" aria-label="Toggle sound effects" title="Toggle Futuristic Tech Audio">
+          <span class="theme-icon" id="sound-icon">🔊</span>
+        </button>
+
+        <!-- Dark / Light Theme Toggle -->
+        <button id="theme-toggle-btn" class="theme-toggle" type="button" aria-label="Toggle visual theme" title="Toggle Dark/Light Mode">
+          <span class="theme-icon" id="theme-icon">☀️</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="hero-section">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="badge-sparkle">🚀</span> Fall 2026 Campus Tech Season
+      </div>
+      <h1 class="hero-title">
+        Build The Future.<br>
+        <span class="gradient-text">One Workshop At A Time.</span>
+      </h1>
+      <p class="hero-subtitle">
+        Join our vibrant campus tech community. Hands-on coding workshops, hackathons, and AI crash courses designed specifically for students — 100% free and open to everyone.
+      </p>
+
+      <!-- Interactive Next Event Countdown Widget -->
+      <div class="countdown-widget" id="countdown-widget">
+        <div class="countdown-header">
+          <span class="pulse-dot"></span>
+          <span class="countdown-title">NEXT WORKSHOP COUNTDOWN</span>
+        </div>
+        <div class="countdown-timer" id="countdown-timer">
+          <div class="time-box"><span id="cd-days">00</span><label>DAYS</label></div>
+          <span class="time-sep">:</span>
+          <div class="time-box"><span id="cd-hours">00</span><label>HOURS</label></div>
+          <span class="time-sep">:</span>
+          <div class="time-box"><span id="cd-mins">00</span><label>MINS</label></div>
+          <span class="time-sep">:</span>
+          <div class="time-box"><span id="cd-secs">00</span><label>SECS</label></div>
+        </div>
+        <div class="countdown-event-name" id="countdown-event-name">Loading upcoming session...</div>
+      </div>
+
+      <div class="hero-cta-group">
+        <button id="hero-load-btn" class="btn btn-primary btn-glow" type="button">
+          <span>⚡ Explore Events</span>
+        </button>
+        <a href="#registration-section" class="btn btn-secondary">
+          <span>📝 Register as Student</span>
+        </a>
+      </div>
+
+      <!-- Quick Metrics Strip -->
+      <div class="metrics-row">
+        <div class="metric-card">
+          <span class="metric-val" id="metric-events-count">5</span>
+          <span class="metric-label">Live Tech Events</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-val">500+</span>
+          <span class="metric-label">Active Learners</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-val">4</span>
+          <span class="metric-label">Specialized Tracks</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-val">100%</span>
+          <span class="metric-label">Free & Certified</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-container">
+    <div class="layout-grid">
+
+      <!-- LEFT COLUMN: Events Discovery & Schedule -->
+      <section class="events-section" id="events-section">
+        
+        <div class="section-topbar">
+          <div class="section-title-wrap">
+            <span class="section-kicker">Interactive Schedule</span>
+            <h2>Upcoming Technical Events</h2>
+          </div>
+          <button id="load-events-btn" class="btn btn-outline" type="button" title="Fetch fresh events from FastAPI">
+            <span class="btn-icon">🔄</span>
+            <span>Refresh Events</span>
+          </button>
+        </div>
+
+        <!-- Filter & Search Controls -->
+        <div class="filter-controls">
+          <div class="search-input-wrap">
+            <span class="search-icon">🔍</span>
+            <input 
+              type="text" 
+              id="event-search-input" 
+              class="search-input" 
+              placeholder="Search by topic, speaker, or keyword..."
+              autocomplete="off"
+            >
+            <button id="search-clear-btn" class="search-clear-btn" type="button" aria-label="Clear search" style="display: none;">✕</button>
+          </div>
+
+          <!-- Category Filter Pills -->
+          <div class="category-pills" id="category-pills" role="tablist" aria-label="Filter events by category">
+            <button class="pill active" data-category="all" role="tab" aria-selected="true">All Events</button>
+            <button class="pill" data-category="Web Dev" role="tab" aria-selected="false">🌐 Web Dev</button>
+            <button class="pill" data-category="Artificial Intelligence" role="tab" aria-selected="false">🤖 AI & ML</button>
+            <button class="pill" data-category="Hackathon" role="tab" aria-selected="false">⚡ Hackathons</button>
+            <button class="pill" data-category="Cloud & DevOps" role="tab" aria-selected="false">☁️ Cloud</button>
+            <button class="pill" data-category="Security" role="tab" aria-selected="false">🛡️ Security</button>
+            <button class="pill" data-category="saved" role="tab" aria-selected="false">⭐ Saved (<span id="saved-count">0</span>)</button>
+          </div>
+        </div>
+
+        <!-- Dynamic Events Container -->
+        <div id="events-container" class="events-feed">
+          <div class="empty-state">
+            <div class="empty-icon">📡</div>
+            <h3>FastAPI Events Not Loaded Yet</h3>
+            <p>Click the <strong>"Refresh Events"</strong> button above or click below to load the real-time schedule from our Python backend.</p>
+            <button id="empty-state-load-btn" class="btn btn-primary" type="button">
+              <span>Load Live Schedule</span>
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+
+      <!-- RIGHT COLUMN: Registration Form & Live Tech Pass -->
+      <section class="registration-section" id="registration-section">
+        
+        <div class="registration-card">
+          <div class="card-header">
+            <div class="badge-tag">Quick Enrollment</div>
+            <h2>Student Registration</h2>
+            <p class="card-desc">Reserve your spot in upcoming workshops and receive instant confirmation.</p>
+          </div>
+
+          <!-- Alert Notification Box -->
+          <div id="alert-box" class="alert" role="alert" style="display: none;"></div>
+
+          <!-- Registration Form -->
+          <form id="registration-form" novalidate>
+            
+            <div class="form-field">
+              <label for="student-name">
+                <span>Student Full Name</span>
+                <span class="required-star">*</span>
+              </label>
+              <div class="input-with-icon">
+                <span class="input-icon">👤</span>
+                <input 
+                  type="text" 
+                  id="student-name" 
+                  name="name" 
+                  class="form-input" 
+                  placeholder="e.g. Maya Lin" 
+                  required
+                >
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label for="student-email">
+                <span>Student Email Address</span>
+                <span class="required-star">*</span>
+              </label>
+              <div class="input-with-icon">
+                <span class="input-icon">✉️</span>
+                <input 
+                  type="email" 
+                  id="student-email" 
+                  name="email" 
+                  class="form-input" 
+                  placeholder="e.g. maya.lin@university.edu" 
+                  required
+                >
+              </div>
+              <span class="field-hint">Your event pass & reminders will be sent to this email.</span>
+            </div>
+
+            <div class="form-field">
+              <label for="event-select">
+                <span>Select Workshop / Event</span>
+                <span class="optional-tag">(Optional)</span>
+              </label>
+              <div class="input-with-icon">
+                <span class="input-icon">🎯</span>
+                <select id="event-select" name="event_id" class="form-select">
+                  <option value="">General Community Membership</option>
+                  <!-- Populated dynamically when events load -->
+                </select>
+              </div>
+            </div>
+
+            <button type="submit" id="submit-btn" class="btn btn-primary btn-block btn-glow">
+              <span class="btn-text">Complete Registration</span>
+              <span class="btn-arrow">→</span>
+            </button>
+          </form>
+
+          <!-- Interactive Digital Tech Pass (Revealed upon registration) -->
+          <div id="tech-pass" class="tech-pass" style="display: none;">
+            <div class="pass-header">
+              <div class="pass-logo">⚡ STUDENT TECH PASS</div>
+              <div class="pass-badge">CONFIRMED</div>
+            </div>
+            
+            <div class="pass-body">
+              <div class="pass-row">
+                <span class="pass-label">ATTENDEE</span>
+                <span class="pass-val" id="pass-name">-</span>
+              </div>
+              <div class="pass-row">
+                <span class="pass-label">EMAIL</span>
+                <span class="pass-val" id="pass-email">-</span>
+              </div>
+              <div class="pass-row">
+                <span class="pass-label">EVENT / TRACK</span>
+                <span class="pass-val highlight" id="pass-event">-</span>
+              </div>
+              <div class="pass-row">
+                <span class="pass-label">REGISTRATION ID</span>
+                <span class="pass-val code" id="pass-id">#STH-2026-0001</span>
+              </div>
+            </div>
+
+            <div class="pass-footer">
+              <div class="qr-mock" title="Verified Campus Tech Pass">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M2 2h8v8H2V2zm2 2v4h4V4H4zm10-2h8v8h-8V2zm2 2v4h4V4h-4zM2 14h8v8H2v-8zm2 2v4h4v-4H4zm14 3h2v3h-2v-3zm0-5h4v2h-4v-2zm-4 0h2v4h-2v-4zm2 6h2v2h-2v-2zm-2-2h2v2h-2v-2zm4-2h2v2h-2v-2z"/>
+                </svg>
+              </div>
+              <div class="pass-meta">
+                <span>FastAPI Validated</span>
+                <strong>Ready for Check-in</strong>
+              </div>
+            </div>
+
+            <button id="register-another-btn" class="btn btn-outline btn-block mt-3" type="button">
+              <span>+ Register Another Student</span>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Quick FAQ / Community Card -->
+        <div class="info-card">
+          <h3>💡 Frequently Asked Questions</h3>
+          <details class="faq-item">
+            <summary>Are these events completely free?</summary>
+            <p>Yes! Every workshop, hackathon, and guest session organized through Student Tech Hub is 100% free for all students.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Do I need prior coding experience?</summary>
+            <p>Not at all. We offer dedicated tracks ranging from complete beginner to advanced cloud & AI architecture.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Do attendees get certificates?</summary>
+            <p>Yes, all verified attendees receive a digital certificate of completion after finishing the workshop project.</p>
+          </details>
+        </div>
+
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Modern Footer -->
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-col brand-col">
+        <div class="footer-brand">
+          <span>⚡</span> Student Tech Hub
+        </div>
+        <p>Bridging students with modern software engineering, artificial intelligence, and open-source innovation.</p>
+      </div>
+
+      <div class="footer-col">
+        <h4>Tech Tracks</h4>
+        <ul>
+          <li>Web Development</li>
+          <li>Artificial Intelligence</li>
+          <li>Cloud & DevOps</li>
+          <li>Cybersecurity</li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Architecture</h4>
+        <ul>
+          <li>Frontend: Vanilla HTML5 / CSS3 / JS</li>
+          <li>Backend: Python 3 & FastAPI</li>
+          <li>Endpoints: REST + CORS</li>
+          <li>No bulky frameworks required</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2026 Student Tech Hub &bull; Empowering Campus Technologists Everywhere.</p>
+    </div>
+  </footer>
+
+  <!-- Floating Toast Notifications -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- Confetti Canvas for Celebration -->
+  <canvas id="confetti-canvas" class="confetti-canvas"></canvas>
+
+  <!-- Application Script -->
+  <script src="script.js"></script>
+</body>
+</html>
