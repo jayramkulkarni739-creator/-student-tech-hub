@@ -1,15 +1,16 @@
 # NovaSphere 🪐✨
-### Next-Gen 3D Student Tech Nexus & Workshop Platform
+### Next-Gen Personalized AI Experiences & 3D Workshop Platform
 
-A beginner-friendly, visually stunning full-stack web application designed for student developers to discover upcoming technical events and register online — powered by **Python FastAPI** and **Vanilla 3D Web Graphics**.
+A beginner-friendly, visually stunning full-stack web application designed for student developers to discover upcoming technical events and receive tailored recommendations — powered by **Python FastAPI**, **Personalized AI Experiences**, and **Vanilla 3D Web Graphics**.
 
 ---
 
 ## 📌 What the Project Does
 
-**NovaSphere** is an interactive, spatial student tech ecosystem that bridges modern web design with a lightweight, high-performance Python backend.
+**NovaSphere** is an interactive, spatial tech ecosystem and **Personalized AI Experience** platform that bridges modern web design with a lightweight, high-performance Python backend.
 
 Key highlights:
+- 🤖 **Personalized AI Recommendations Engine (`POST /api/recommend`)**: Analyzes student interests and experience levels, computes match percentages, gives personalized explanations, and ranks upcoming workshops for each developer.
 - 🪐 **Interactive 3D Spatial Core**: A live 3D Gyroscope/Orb in the hero section built with WebGL and Three.js (with an automated pure-math Canvas 3D fallback for offline environments). Features mouse tracking, drag-to-rotate, wireframe toggle, and a triggerable 3D shockwave pulse!
 - 🎫 **3D Flippable Holographic Pass**: Upon registration, an interactive double-sided 3D pass is generated. Students can click or drag to flip the pass in 3D space (`transform: rotateY(180deg)`), revealing their verified details on the front and cryptographic QR security credentials on the back.
 - ⚡ **Interactive 3D Depth Event Cards**: Workshop cards tilt dynamically in 3D space with cursor-following specular light glare and multi-layered parallax depth.
@@ -28,7 +29,8 @@ student-tech-hub/
 ├── frontend/
 │   ├── index.html       # Semantic HTML5 markup, 3D viewports & modals
 │   ├── style.css        # Cyber styling, 3D CSS perspectives & responsive layout
-│   └── script.js        # Vanilla JS handling 3D WebGL engine & FastAPI fetch
+│   ├── script.js        # Vanilla JS handling 3D WebGL engine & FastAPI fetch
+│   └── recommend.js     # Personalized AI recommendation engine UI handler
 │
 ├── backend/
 │   ├── main.py          # FastAPI application, CORS middleware & REST endpoints
